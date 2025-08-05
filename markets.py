@@ -9,6 +9,7 @@ class Market():
     def __init__(self, n):
         self.n = n
         self.q = np.zeros(n)
+        self.trades = np.zeros(n)
         self.funds = 0
         self.history = [self.current_prices()]
 
@@ -42,7 +43,8 @@ class LMSRMarket(Market):
         assert (
             self.q + z >= 0).all(), f"Cannot sell more shares than what is currently on the market"
         self.funds = self.funds + (p := self.price(z))
-        self.q = self.q + z
+        self.q += z
+        self.trades += z
         self.history.append(self.current_prices())
         return p
 
@@ -71,6 +73,18 @@ class SimpleAutoTrader(Trader):
     def step(self, markets: List[Market]):
         for i, z in enumerate(self.rule(markets)):
             self.trade(markets[i], z)
+
+class RandomMultiBernoulliTrader(Trader):
+    def __init__(self, funds, ground, idx):
+        super().__init__(funds)
+        belief = np.random.beta(100 * ground, 100 * (1 - ground))
+        self.belief = np.array([belief, 1 - belief])
+        self.idx = idx
+
+    def step(self, markets: List[Market]):
+        z = (self.belief > markets[self.idx].current_prices()).astype(int) * 0.01
+        self.trade(markets[self.idx], z)
+
 
 
 def unit_trade(markets, beliefs):

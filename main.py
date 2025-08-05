@@ -2,7 +2,6 @@ from markets import *
 
 
 def two_market_sim(traders, m1, m2, m1_given_m2):
-
     M1, M2 = LMSRMarket(2), LMSRMarket(2)
 
     for _ in range(500):
